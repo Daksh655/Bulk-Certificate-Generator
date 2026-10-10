@@ -138,16 +138,24 @@ npm run build
 - **File Storage:** Certificates are saved directly to local disk in a structured `generated/{job_id}/` format. Database columns only store relative POSIX paths to remain machine-portable.
 
 ## What I Learned
-Through this project, I demonstrated practical applications of:
-- **REST API Design & Validation:** Enforcing strict Pydantic parsing.
-- **SQL Relationships & Transaction Handling:** Utilizing SQLAlchemy relationships natively and committing atomic operations to maintain state integrity.
-- **Concurrency & Background Tasks:** Managing threads safely with local isolated database sessions.
-- **File Generation & Handling:** Natively rendering standard PDFs and ZIP buffers, tracking safe relative local filesystem pathways.
-- **Error Handling & Automated Testing:** Mocking system-level tasks and constructing fully isolated temporary testing environments.
+
+Through this project, I learned how to:
+
+- **Build REST APIs:** Use FastAPI to accept requests, validate input, and return responses.
+- **Work with databases:** Store jobs and certificate details using SQLite and SQLAlchemy.
+- **Generate PDF certificates:** Create personalized certificates using a fixed template and Python.
+- **Process multiple requests in the background:** Generate many certificates without making the user wait for every PDF to finish.
+- **Handle failures:** Allow other certificates to generate even if one recipient's certificate fails.
+- **Track progress:** Show how many certificates are completed and how many failed.
+- **Test an application:** Write automated tests to check API behavior, certificate generation, and downloads.
 
 ## Future Scope
-While in-process background tasks and local file storage are highly effective and appropriate for the constraint of this assignment, a production-scale application should adopt:
-- **Persistent Task Queue:** Integrating Celery or RabbitMQ to recover processing state if the server restarts.
-- **Production Database:** Migrating from SQLite to PostgreSQL to handle broader multi-user concurrency securely.
-- **Object Storage:** Storing generated PDFs in AWS S3 (or similar) rather than local disks.
-- **Additional Scalability:** Implementing Authentication (JWT), automated frontend testing (Jest/Cypress), deployment containerization (Docker), and multilingual PDF font rendering.
+
+The project can be improved further by:
+
+- **Better background processing:** Use a task queue such as Celery with Redis so unfinished jobs can be recovered if the server restarts.
+- **A stronger database:** Use PostgreSQL instead of SQLite for a larger application with more users.
+- **Cloud file storage:** Store generated certificates in a service such as AWS S3 instead of keeping all files on the server.
+- **User login:** Add authentication so only authorized users can access their jobs and certificates.
+- **Deployment:** Deploy the application online and use Docker to make setup and deployment easier.
+- **More testing and language support:** Add frontend tests and support names in languages such as Hindi by using suitable fonts.
