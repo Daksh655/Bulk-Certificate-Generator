@@ -138,6 +138,13 @@ CertificateGenerationError. File layout:
 
 generated/{job_id}/certificate_{certificate_id}.pdf
 
+Downloads are handled by services/certificate_service.py, shared by the
+single-PDF and ZIP endpoints. Stored paths are resolved with
+resolve_certificate_path(), which rejects any path that resolves outside
+generated/ (directory traversal or absolute paths). ZIP files are built
+on request in a temporary file with the standard-library zipfile module
+and deleted after the response is sent.
+
 ---
 
 ## 6. Frontend Communication

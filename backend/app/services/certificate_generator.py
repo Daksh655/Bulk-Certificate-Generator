@@ -49,9 +49,20 @@ def generate_certificate(
     return output_path.relative_to(PROJECT_ROOT).as_posix()
 
 
+class UnsafeCertificatePathError(ValueError):
+    """Raised when a stored path points outside the generated/ directory."""
+
+
 def resolve_certificate_path(relative_path: str) -> Path:
-    """Turn a stored project-relative path into an absolute filesystem path."""
-    return PROJECT_ROOT / relative_path
+    """Turn a stored project-relative path into an absolute filesystem path.
+
+    The result must stay inside generated/, so values such as
+    "../../outside.txt" or absolute paths are rejected.
+    """
+    resolved = (PROJECT_ROOT / relative_path).resolve()
+    if not resolved.is_relative_to(GENERATED_DIR.resolve()):
+        raise UnsafeCertificatePathError(f"Unsafe certificate path: {relative_path!r}")
+    return resolved
 
 
 
