@@ -28,6 +28,14 @@ def create_job(
     return job
 
 
+@router.get("", response_model=list[JobStatusResponse])
+def list_jobs(db: Session = Depends(get_db)):
+    """
+    List all generation jobs, ordered newest first.
+    """
+    return job_service.get_all_jobs(db)
+
+
 @router.get("/{job_id}", response_model=JobStatusResponse)
 def get_job_status(job_id: int, db: Session = Depends(get_db)):
     """

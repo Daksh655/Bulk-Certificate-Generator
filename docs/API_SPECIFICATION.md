@@ -36,6 +36,26 @@ Response (`201`):
 Invalid input (blank names, invalid emails, empty recipient list, missing
 fields) returns `422`.
 
+## GET /api/jobs
+
+Returns a list of all generation jobs in descending order (newest first).
+
+```json
+[
+  {
+    "id": 1,
+    "created_at": "2026-10-10T14:30:00.000000",
+    "event_name": "Advanced Python Workshop",
+    "event_date": "2026-10-10",
+    "status": "COMPLETED",
+    "total_count": 2,
+    "success_count": 2,
+    "failure_count": 0,
+    "progress": 100.0
+  }
+]
+```
+
 ## GET /api/jobs/{job_id}
 
 Returns job status and progress. Clients poll this endpoint.

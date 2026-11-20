@@ -24,6 +24,15 @@ def test_generate_certificate_success():
     assert len(content) > 0
     assert content.startswith(b"%PDF-")
     assert content.rstrip().endswith(b"%%EOF")
+    
+    # pageCompression=0 allows us to check text in raw bytes
+    assert b"This certificate is proudly presented to" in content
+    assert b"In recognition of successfully completing" in content
+    assert b"Issuer: Daksh's Learning Platform" in content
+    assert b"CERTIFICATE OF COMPLETION" in content
+    assert b"Test Name" in content
+    assert b"Test Event" in content
+    assert b"Certificate ID: 999" in content
 
 def test_generate_certificate_long_names():
     # Long names and event names shouldn't fail

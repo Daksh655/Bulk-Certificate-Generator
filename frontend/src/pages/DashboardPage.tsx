@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createJob } from '../api/jobs';
-import { FileText, Users } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { createJob, getAllJobs } from '../api/jobs';
+import { Users, RefreshCw, ChevronRight } from 'lucide-react';
+import type { JobStatusResponse } from '../types';
+import { StatusBadge, ProgressBar } from '../components/Shared';
 
 export const DashboardPage: React.FC = () => {
   const [eventName, setEventName] = useState('');
@@ -11,6 +13,57 @@ export const DashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // History state
+  const [jobs, setJobs] = useState<JobStatusResponse[]>([]);
+  const [isJobsLoading, setIsJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState<string | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  const fetchJobs = async () => {
+    try {
+      setJobsError(null);
+      const data = await getAllJobs();
+      setJobs(data);
+      return data;
+    } catch (err: any) {
+      setJobsError(err.message || 'Failed to load existing jobs.');
+      return null;
+    } finally {
+      setIsJobsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const poll = async () => {
+      const currentJobs = await fetchJobs();
+      if (!active) return;
+      
+      const hasProcessingJobs = currentJobs?.some(
+        j => j.status === 'PENDING' || j.status === 'PROCESSING'
+      );
+
+      if (hasProcessingJobs) {
+        timerRef.current = window.setTimeout(poll, 3000);
+      }
+    };
+
+    poll();
+
+    return () => {
+      active = false;
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleManualRefresh = () => {
+    setIsJobsLoading(true);
+    fetchJobs();
+  };
 
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,16 +121,15 @@ export const DashboardPage: React.FC = () => {
   const recipientCount = recipientsText.split('\n').filter(l => l.trim()).length;
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-5xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <FileText className="mx-auto h-12 w-12 text-indigo-600 mb-4" />
         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Bulk Certificate Generator</h1>
         <p className="mt-3 text-lg text-gray-500">Create, manage, and download certificates in bulk.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-2">
-          <div className="bg-white shadow rounded-lg px-6 py-8">
+          <div className="bg-white shadow rounded-lg px-6 py-8 h-full">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Job</h2>
             
             {error && (
@@ -162,6 +214,71 @@ export const DashboardPage: React.FC = () => {
             </form>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white shadow rounded-lg px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Existing Jobs</h2>
+          <button 
+            onClick={handleManualRefresh}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isJobsLoading ? 'animate-spin text-indigo-600' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        {jobsError ? (
+          <div className="text-red-600 text-sm">{jobsError}</div>
+        ) : jobs.length === 0 && !isJobsLoading ? (
+          <div className="text-gray-500 text-sm text-center py-6">No jobs found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {jobs.map((job) => (
+                  <tr key={job.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">#{job.id}</div>
+                      <div className="text-xs text-gray-500">{new Date(job.created_at).toLocaleString()}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{job.event_name}</div>
+                      <div className="text-xs text-gray-500">{job.event_date}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={job.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap w-48">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>{job.progress}%</span>
+                        <span>{job.success_count}/{job.total_count}</span>
+                      </div>
+                      <ProgressBar progress={job.progress} />
+                      {job.failure_count > 0 && (
+                        <div className="text-xs text-red-500 mt-1">{job.failure_count} failed</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link to={`/jobs/${job.id}`} className="text-indigo-600 hover:text-indigo-900 inline-flex items-center">
+                        View Job <ChevronRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

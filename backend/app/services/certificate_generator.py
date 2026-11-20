@@ -73,56 +73,64 @@ def _render_pdf(
     event_name: str,
     event_date: date,
 ) -> None:
-    # Page compression is off so the text stays inspectable; the file is tiny anyway.
+    # Page compression is off so the text stays inspectable
     pdf = Canvas(str(output_path), pagesize=(PAGE_WIDTH, PAGE_HEIGHT), pageCompression=0)
     pdf.setTitle(f"Certificate {certificate_id}")
 
-    _draw_border(pdf)
-
+    # Deep navy header band
     pdf.setFillColor(NAVY)
-    pdf.setFont("Helvetica-Bold", 44)
-    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 150, "CERTIFICATE")
+    pdf.rect(0, PAGE_HEIGHT - 120, PAGE_WIDTH, 120, fill=1, stroke=0)
+    
+    # Gold accent line below the header
     pdf.setFillColor(GOLD)
-    pdf.setFont("Helvetica", 22)
-    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 185, "OF COMPLETION")
+    pdf.rect(0, PAGE_HEIGHT - 125, PAGE_WIDTH, 5, fill=1, stroke=0)
 
+    # Brand name in header (top left)
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, PAGE_HEIGHT - 65, "Daksh's Learning Platform")
+
+    # Main Heading
+    pdf.setFillColor(NAVY)
+    pdf.setFont("Helvetica-Bold", 42)
+    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 220, "CERTIFICATE OF COMPLETION")
+
+    # Introduction
     pdf.setFillColor(GREY)
-    pdf.setFont("Helvetica-Oblique", 15)
-    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 235, "This certifies that")
+    pdf.setFont("Helvetica-Oblique", 16)
+    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 280, "This certificate is proudly presented to")
 
-    _draw_fitted_text(pdf, recipient_name, "Helvetica-Bold", 36, PAGE_HEIGHT - 285, NAVY)
+    # Recipient Name (prominent)
+    _draw_fitted_text(pdf, recipient_name, "Helvetica-Bold", 40, PAGE_HEIGHT - 340, NAVY)
+    
+    # Restrained gold line under the recipient's name
     pdf.setStrokeColor(GOLD)
     pdf.setLineWidth(1)
-    pdf.line(CENTER_X - 180, PAGE_HEIGHT - 297, CENTER_X + 180, PAGE_HEIGHT - 297)
+    pdf.line(CENTER_X - 250, PAGE_HEIGHT - 355, CENTER_X + 250, PAGE_HEIGHT - 355)
 
+    # Completion statement
     pdf.setFillColor(GREY)
-    pdf.setFont("Helvetica-Oblique", 15)
-    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 330, "has successfully completed")
+    pdf.setFont("Helvetica-Oblique", 16)
+    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 400, "In recognition of successfully completing")
 
-    _draw_fitted_text(pdf, event_name, "Helvetica-Bold", 26, PAGE_HEIGHT - 372, NAVY)
+    # Event Name
+    _draw_fitted_text(pdf, event_name, "Helvetica-Bold", 28, PAGE_HEIGHT - 440, NAVY)
 
+    # Human-readable completion date
     pdf.setFillColor(GREY)
     pdf.setFont("Helvetica", 14)
-    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 408, _format_date(event_date))
+    pdf.drawCentredString(CENTER_X, PAGE_HEIGHT - 485, f"Completed on {_format_date(event_date)}")
 
     _draw_footer(pdf, certificate_id)
+    
     pdf.showPage()
     pdf.save()
-
-
-def _draw_border(pdf: Canvas) -> None:
-    pdf.setStrokeColor(GOLD)
-    pdf.setLineWidth(4)
-    pdf.rect(25, 25, PAGE_WIDTH - 50, PAGE_HEIGHT - 50)
-    pdf.setStrokeColor(NAVY)
-    pdf.setLineWidth(1)
-    pdf.rect(35, 35, PAGE_WIDTH - 70, PAGE_HEIGHT - 70)
 
 
 def _draw_fitted_text(
     pdf: Canvas, text: str, font: str, size: int, y: float, color: colors.Color
 ) -> None:
-    """Draw centered text, shrinking the font so long values stay inside the border."""
+    """Draw centered text, shrinking the font so long values stay inside the boundaries."""
     while size > 10 and stringWidth(text, font, size) > MAX_TEXT_WIDTH:
         size -= 1
     pdf.setFillColor(color)
@@ -131,14 +139,17 @@ def _draw_fitted_text(
 
 
 def _draw_footer(pdf: Canvas, certificate_id: int) -> None:
+    # Restrained signature/issuer section (bottom center)
     pdf.setStrokeColor(NAVY)
     pdf.setLineWidth(1)
-    pdf.line(CENTER_X - 100, 90, CENTER_X + 100, 90)
+    pdf.line(CENTER_X - 120, 100, CENTER_X + 120, 100)
     pdf.setFillColor(GREY)
     pdf.setFont("Helvetica", 12)
-    pdf.drawCentredString(CENTER_X, 74, "Organizer")
+    pdf.drawCentredString(CENTER_X, 80, "Issuer: Daksh's Learning Platform")
+    
+    # Small certificate ID in the footer (bottom left)
     pdf.setFont("Helvetica", 10)
-    pdf.drawString(55, 50, f"Certificate ID: {certificate_id}")
+    pdf.drawString(50, 45, f"Certificate ID: {certificate_id}")
 
 
 def _format_date(value: date) -> str:

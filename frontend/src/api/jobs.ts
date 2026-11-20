@@ -11,6 +11,11 @@ export const getJobStatus = async (jobId: number) => {
   return response.data;
 };
 
+export const getAllJobs = async () => {
+  const response = await apiClient.get<JobStatusResponse[]>("/api/jobs");
+  return response.data;
+};
+
 export const getJobCertificates = async (jobId: number) => {
   const response = await apiClient.get<CertificateResponse[]>(`/api/jobs/${jobId}/certificates`);
   return response.data;

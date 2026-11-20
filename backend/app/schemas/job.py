@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated
 
 from pydantic import (
@@ -25,6 +25,7 @@ class JobResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
+    created_at: datetime
     event_name: str
     event_date: date
     status: str

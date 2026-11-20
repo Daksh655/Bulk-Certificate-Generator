@@ -49,3 +49,6 @@ def create_generation_job(db: Session, request: CreateJobRequest) -> GenerationJ
 
 def get_job(db: Session, job_id: int) -> GenerationJob | None:
     return db.get(GenerationJob, job_id)
+
+def get_all_jobs(db: Session) -> list[GenerationJob]:
+    return db.query(GenerationJob).order_by(GenerationJob.id.desc()).all()

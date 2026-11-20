@@ -11,6 +11,7 @@ export interface CreateJobRequest {
 
 export interface JobResponse {
   id: number;
+  created_at: string;
   event_name: string;
   event_date: string;
   status: string;
